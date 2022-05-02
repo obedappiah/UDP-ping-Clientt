@@ -1,0 +1,32 @@
+import socket
+import time
+import numpy
+roundTriptime=[]
+clientSock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+server_addr = ('localhost', 12000)
+clientSock.settimeout(2)
+
+try:
+    for i in range(1, 201):
+        start = time.time()
+        message = 'Ping #' + str(i) + " " + time.ctime(start)
+        try:
+            sent = clientSock.sendto(message.encode(), server_addr)
+            print("Sent " + message)
+            data, server = clientSock.recvfrom(4096)
+        
+            print("Received " + data.decode() )
+            end = time.time();
+            elapsed = (end - start)*1000
+            roundTriptime.append(elapsed)
+            print("RTT: " + str('%.5f'%elapsed) + "ms\n")
+        except socket.timeout:
+            print("#" + str(i) + " Request Timed out\n")
+
+finally:
+    print("closing socket")
+    clientSock.close()
+print('Minimum RTT:  {0:.5f}ms'.format(float(min(roundTriptime))))
+print('Maximum RTT:  {0:.5f}ms'.format(float(max(roundTriptime))))
+print('Standard Deviation: {0:.5f}'.format(numpy.std(roundTriptime)))
+print('Packet loss rate: {}%'.format(float((200-len(roundTriptime))/2)))
